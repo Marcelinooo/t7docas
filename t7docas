@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assistente de Doca T7</title>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --success: #27ae60;
+            --warning: #f39c12;
+            --danger: #e74c3c;
+            --dark: #34495e;
+            --light-bg: #f8f9fa;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f7fa;
+            color: var(--dark);
+            line-height: 1.4;
+            padding: 8px;
+            font-size: 14px;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 15px;
+            padding: 10px;
+        }
+        
+        .page-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--primary);
+            margin-bottom: 3px;
+        }
+        
+        .clock-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .current-time {
+            font-size: 1.4rem;
+            font-weight: bold;
+            background-color: var(--dark);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+        }
+        
+        .status-section {
+            margin-bottom: 20px;
+        }
+        
+        .section-header {
+            padding: 8px 12px;
+            border-radius: 6px;
+            color: white;
+            font-weight: bold;
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .section-active {
+            background-color: var(--success);
+        }
+        
+        .section-upcoming {
+            background-color: var(--warning);
+        }
+        
+        .section-expired {
+            background-color: var(--danger);
+        }
+        
+        .channels-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+        
+        .channel-card {
+            background-color: white;
+            border-radius: 6px;
+            padding: 10px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            border-top: 3px solid var(--light-bg);
+            min-height: 120px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .channel-card.active {
+            border-top-color: var(--success);
+        }
+        
+        .channel-card.upcoming {
+            border-top-color: var(--warning);
+        }
+        
+        .channel-card.expired {
+            border-top-color: var(--danger);
+        }
+        
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 6px;
+        }
+        
+        .channel-name {
+            font-weight: bold;
+            font-size: 0.9rem;
+            color: var(--dark);
+        }
+        
+        .channel-time {
+            font-weight: bold;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 0.75rem;
+            color: white;
+            text-align: center;
+            min-width: 45px;
+        }
+        
+        .time-active {
+            background-color: var(--success);
+        }
+        
+        .time-upcoming {
+            background-color: var(--warning);
+        }
+        
+        .time-expired {
+            background-color: var(--danger);
+        }
+        
+        .time-info {
+            font-size: 0.7rem;
+            color: #7f8c8d;
+            margin-bottom: 6px;
+            line-height: 1.2;
+        }
+        
+        .card-details {
+            flex-grow: 1;
+            font-size: 0.75rem;
+        }
+        
+        .detail-item {
+            margin-bottom: 2px;
+        }
+        
+        .detail-label {
+            font-weight: bold;
+            color: var(--primary);
+            display: inline-block;
+            min-width: 40px;
+        }
+        
+        .last-update {
+            text-align: center;
+            margin-top: 15px;
+            color: #7f8c8d;
+            font-size: 0.8rem;
+            padding: 8px;
+        }
+        
+        /* Responsivo */
+        @media (max-width: 768px) {
+            .channels-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 6px;
+            }
+            
+            .channel-card {
+                padding: 8px;
+                min-height: 110px;
+            }
+            
+            .current-time {
+                font-size: 1.2rem;
+                padding: 6px 12px;
+            }
+            
+            .page-title {
+                font-size: 1.3rem;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .channels-grid {
+                grid-template-columns: 1fr;
+                gap: 5px;
+            }
+            
+            body {
+                padding: 5px;
+                font-size: 13px;
+            }
+            
+            .channel-card {
+                min-height: 100px;
+                padding: 6px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="page-title">Assistente de Doca T7</div>
+        </header>
+        
+        <div class="clock-container">
+            <div class="current-time" id="current-time">Carregando...</div>
+        </div>
+        
+        <div id="channels-container">
+            <!-- Os canais serão gerados dinamicamente pelo JavaScript -->
+        </div>
+        
+        <div class="last-update" id="last-update">
+            Atualizado: <span id="update-time">Carregando...</span>
+            <br><small>Próxima: <span id="next-update">5:00</span></small>
+        </div>
+    </div>
+
+    <script>
+        // Dados dos canais COMPLETOS
+        const channelData = [
+            // Horários entre 00:00 e 03:00
+            { canal: "SSP6", horario: "00:00", armazenagem: "RB-36", docas: "227,228" },
+            { canal: "SSP34", horario: "00:00", armazenagem: "RB-33", docas: "283,284" },
+            { canal: "SSP23", horario: "00:30", armazenagem: "RB-46", docas: "276,277" },
+            { canal: "SSP8", horario: "00:30", armazenagem: "RG-07...13", docas: "279,280" },
+            { canal: "SSP20", horario: "00:30", armazenagem: "RB-02", docas: "237" },
+            { canal: "SSP9", horario: "00:30", armazenagem: "RB-11", docas: "230,231" },
+            { canal: "SRS10", horario: "01:00", armazenagem: "RB-20,21", docas: "270-272" },
+            { canal: "SRS3", horario: "01:00", armazenagem: "RB-06-08", docas: "235,236" },
+            { canal: "SRS7", horario: "01:00", armazenagem: "RB-09,10", docas: "238,239" },
+            { canal: "SSP18", horario: "01:00", armazenagem: "RB-16,17", docas: "267-269" },
+            { canal: "SSP25", horario: "01:00", armazenagem: "RB-03-05", docas: "281,282" },
+            { canal: "SSP29", horario: "01:00", armazenagem: "RB-22,23", docas: "233,234" },
+            { canal: "SSP45", horario: "01:00", armazenagem: "RG-01,02", docas: "292,293" },
+            { canal: "SSC4", horario: "01:00", armazenagem: "RB-01", docas: "265,266" },
+            { canal: "SSP15", horario: "01:30", armazenagem: "RB-47", docas: "225" },
+            { canal: "SSP17", horario: "01:30", armazenagem: "RB-34,35", docas: "222-224" },
+            { canal: "SSP21", horario: "01:30", armazenagem: "RB-31", docas: "229" },
+            { canal: "SSP39", horario: "02:00", armazenagem: "RB-38", docas: "274,275" },
+            { canal: "SSP1", horario: "02:00", armazenagem: "RB-37", docas: "232" },
+            { canal: "SSP27", horario: "02:00", armazenagem: "RB-15", docas: "220,221" },
+            { canal: "SSP30", horario: "02:00", armazenagem: "RB-24,25", docas: "284-286" },
+            { canal: "SSP36", horario: "02:00", armazenagem: "RB-26", docas: "283" },
+            { canal: "SSP5", horario: "02:00", armazenagem: "RB-42-44", docas: "262-264" },
+            { canal: "SSP7", horario: "02:00", armazenagem: "RB-40,41", docas: "227,228" },
+            { canal: "SGO1", horario: "02:00", armazenagem: "RE-20,21", docas: "252-255" },
+            
+            // Horários entre 03:00 e 08:00
+            { canal: "SSP40", horario: "03:00", armazenagem: "RC-07", docas: "276-279" },
+            { canal: "SRS1", horario: "03:00", armazenagem: "RC-04", docas: "272,273" },
+            { canal: "SRS4", horario: "03:00", armazenagem: "RC-09", docas: "270,271" },
+            { canal: "SRS5", horario: "03:00", armazenagem: "RB-48,49", docas: "268,269" },
+            { canal: "SSP3", horario: "03:00", armazenagem: "RB-28", docas: "266,267" },
+            { canal: "SSP35", horario: "03:00", armazenagem: "RG-05,06", docas: "292" },
+            { canal: "SSP38", horario: "03:00", armazenagem: "RC-08", docas: "280-282" },
+            { canal: "FEDHUB", horario: "04:00", armazenagem: "RB-39", docas: "285,286" },
+            { canal: "TNTHUB1", horario: "04:00", armazenagem: "RB-39", docas: "285,286" },
+            { canal: "SBA2", horario: "04:00", armazenagem: "", docas: "275,258-261" },
+            { canal: "SRS8", horario: "04:00", armazenagem: "RC-01,02", docas: "226-229" },
+            { canal: "SMG13", horario: "04:00", armazenagem: "RC-25", docas: "234-238" },
+            { canal: "SMS1", horario: "05:00", armazenagem: "RC-03,06", docas: "230-233" },
+            { canal: "SMR2", horario: "05:00", armazenagem: "RC-12,13", docas: "274-276" },
+            { canal: "SGO2", horario: "05:00", armazenagem: "RD-13", docas: "270-273" },
+            { canal: "SBA6", horario: "06:00", armazenagem: "RB-51-54", docas: "264-266" },
+            { canal: "SAL1", horario: "06:00", armazenagem: "RE-13-18", docas: "254-258" },
+            { canal: "SBA1", horario: "06:00", armazenagem: "RD-04", docas: "260-263" },
+            { canal: "SJP1", horario: "06:00", armazenagem: "RD-04 A,B", docas: "287-289" },
+            { canal: "SPA1", horario: "06:00", armazenagem: "RD-20-23", docas: "250-253" },
+            { canal: "SMS2", horario: "06:30", armazenagem: "RD-03", docas: "236,237" },
+            { canal: "SSC5", horario: "06:30", armazenagem: "RC-05", docas: "238,239" },
+            { canal: "SMG11", horario: "08:00", armazenagem: "RG-03,04", docas: "281" },
+            { canal: "SMG4", horario: "08:00", armazenagem: "RB-27", docas: "282" },
+            { canal: "SMG7", horario: "08:00", armazenagem: "RD-10", docas: "284-286" },
+            { canal: "SES2", horario: "08:00", armazenagem: "RB-32", docas: "270,271" },
+            
+            // Horários entre 20:00 e 23:59
+            { canal: "SMG5", horario: "20:00", armazenagem: "RB-45", docas: "274,275" },
+            { canal: "SRJ2", horario: "20:00", armazenagem: "RF-16", docas: "283,284" },
+            { canal: "SRS2", horario: "20:00", armazenagem: "RF-07,08", docas: "271-273" },
+            { canal: "SSP14", horario: "20:00", armazenagem: "RD-05", docas: "285,286" },
+            { canal: "SBA4", horario: "21:00", armazenagem: "RF-02-06", docas: "263-269" },
+            { canal: "SSP13", horario: "21:00", armazenagem: "RB-50", docas: "270" },
+            { canal: "SSP4", horario: "22:00", armazenagem: "RE-12", docas: "274-276" },
+            { canal: "SBA3", horario: "22:00", armazenagem: "RC-18-20", docas: "252-255" },
+            { canal: "SBA7", horario: "22:00", armazenagem: "RE-19-20A", docas: "256-259" },
+            { canal: "SES3", horario: "23:00", armazenagem: "RF-14,15", docas: "267-269" },
+            { canal: "SMG3", horario: "23:00", armazenagem: "RF-32,33", docas: "263,264" },
+            { canal: "SSP24", horario: "23:00", armazenagem: "RF-17", docas: "272,273" },
+            { canal: "SSP22", horario: "23:00", armazenagem: "RE-04B", docas: "270,271" },
+            { canal: "SSP16", horario: "23:30", armazenagem: "RF-12", docas: "221-223" }
+        ];
+
+        let nextUpdateTime = 5 * 60 * 1000;
+
+        // Função para atualizar o relógio
+        function updateClock() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('pt-BR', { 
+                hour: '2-digit', 
+                minute: '2-digit', 
+                second: '2-digit' 
+            });
+            document.getElementById('current-time').textContent = timeString;
+            
+            const updateTimeString = now.toLocaleTimeString('pt-BR');
+            document.getElementById('update-time').textContent = updateTimeString;
+        }
+
+        // Função para atualizar o contador da próxima atualização
+        function updateNextUpdateCounter() {
+            const now = new Date();
+            const nextUpdate = new Date(now.getTime() + nextUpdateTime);
+            const minutesLeft = Math.floor((nextUpdate - now) / 60000);
+            const secondsLeft = Math.floor(((nextUpdate - now) % 60000) / 1000);
+            
+            document.getElementById('next-update').textContent = 
+                `${minutesLeft}:${secondsLeft.toString().padStart(2, '0')}`;
+        }
+
+        // Função para converter horário para minutos totais do dia
+        function timeToMinutes(timeStr) {
+            const [hours, minutes] = timeStr.split(':').map(Number);
+            return hours * 60 + minutes;
+        }
+
+        // Função para determinar o status de um canal
+        function getChannelStatus(channelTime, currentTime) {
+            const channelMinutes = timeToMinutes(channelTime);
+            const currentMinutes = timeToMinutes(currentTime);
+            
+            const dockWindowStart = channelMinutes - (4 * 60);
+            const dockWindowEnd = channelMinutes - 10;
+            
+            if (currentMinutes >= dockWindowStart && currentMinutes <= dockWindowEnd) {
+                return 'active';
+            } else if (currentMinutes > channelMinutes) {
+                return 'expired';
+            } else {
+                return 'upcoming';
+            }
+        }
+
+        // Função para verificar se está próximo (menos de 30 minutos)
+        function isProximo(channelTime, currentTime) {
+            const channelMinutes = timeToMinutes(channelTime);
+            const currentMinutes = timeToMinutes(currentTime);
+            return (channelMinutes - currentMinutes) <= 30 && (channelMinutes - currentMinutes) > 0;
+        }
+
+        // Função para renderizar os canais
+        function renderChannels() {
+            const now = new Date();
+            const currentTime = now.toTimeString().slice(0, 5);
+            
+            const channelsContainer = document.getElementById('channels-container');
+            channelsContainer.innerHTML = '';
+            
+            // Agrupar canais por status
+            const channelsByStatus = {
+                active: [],
+                upcoming: [],
+                expired: []
+            };
+            
+            channelData.forEach(channel => {
+                const status = getChannelStatus(channel.horario, currentTime);
+                channelsByStatus[status].push(channel);
+            });
+            
+            // Ordenar canais
+            channelsByStatus.active.sort((a, b) => timeToMinutes(a.horario) - timeToMinutes(b.horario));
+            channelsByStatus.upcoming.sort((a, b) => timeToMinutes(a.horario) - timeToMinutes(b.horario));
+            channelsByStatus.expired.sort((a, b) => timeToMinutes(b.horario) - timeToMinutes(a.horario));
+            
+            // Renderizar DOCA ABERTA
+            const activeChannels = channelsByStatus.active;
+            if (activeChannels.length > 0) {
+                const sectionElement = document.createElement('div');
+                sectionElement.className = 'status-section';
+                
+                sectionElement.innerHTML = `
+                    <div class="section-header section-active">
+                        <span>🟢 DOCA ABERTA</span>
+                        <span>${activeChannels.length}</span>
+                    </div>
+                    <div class="channels-grid">
+                        ${activeChannels.map(channel => {
+                            const channelMinutes = timeToMinutes(channel.horario);
+                            const currentMinutes = timeToMinutes(currentTime);
+                            const minutesLeft = channelMinutes - 10 - currentMinutes;
+                            
+                            return `
+                                <div class="channel-card active">
+                                    <div class="card-header">
+                                        <div class="channel-name">${channel.canal}</div>
+                                        <div class="channel-time time-active">
+                                            ${channel.horario}
+                                        </div>
+                                    </div>
+                                    <div class="time-info">Fecha em ${Math.max(0, minutesLeft)}min</div>
+                                    <div class="card-details">
+                                        ${channel.armazenagem ? `
+                                            <div class="detail-item">
+                                                <span class="detail-label">Armz:</span>${channel.armazenagem}
+                                            </div>
+                                        ` : ''}
+                                        ${channel.docas ? `
+                                            <div class="detail-item">
+                                                <span class="detail-label">Docas:</span>${channel.docas}
+                                            </div>
+                                        ` : ''}
+                                    </div>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                `;
+                channelsContainer.appendChild(sectionElement);
+            }
+            
+            // Renderizar ARMAZENAR (junta upcoming e expired)
+            const allStorageChannels = [...channelsByStatus.upcoming, ...channelsByStatus.expired];
+            if (allStorageChannels.length > 0) {
+                const sectionElement = document.createElement('div');
+                sectionElement.className = 'status-section';
+                
+                sectionElement.innerHTML = `
+                    <div class="section-header section-expired">
+                        <span>🔴 ARMAZENAR</span>
+                        <span>${allStorageChannels.length}</span>
+                    </div>
+                    <div class="channels-grid">
+                        ${allStorageChannels.map(channel => {
+                            const channelMinutes = timeToMinutes(channel.horario);
+                            const currentMinutes = timeToMinutes(currentTime);
+                            const status = getChannelStatus(channel.horario, currentTime);
+                            const isProximoChannel = isProximo(channel.horario, currentTime);
+                            
+                            let timeInfo = '';
+                            let cardClass = 'expired';
+                            let timeClass = 'time-expired';
+                            
+                            if (status === 'upcoming') {
+                                if (isProximoChannel) {
+                                    cardClass = 'upcoming';
+                                    timeClass = 'time-upcoming';
+                                    timeInfo = `Próximo em ${channelMinutes - currentMinutes}min`;
+                                } else {
+                                    timeInfo = `Abre em ${(channelMinutes - (4 * 60)) - currentMinutes}min`;
+                                }
+                            } else {
+                                timeInfo = `Partiu ${channel.horario}`;
+                            }
+                            
+                            return `
+                                <div class="channel-card ${cardClass}">
+                                    <div class="card-header">
+                                        <div class="channel-name">${channel.canal}</div>
+                                        <div class="channel-time ${timeClass}">
+                                            ${status === 'expired' ? 'Armz' : channel.horario}
+                                        </div>
+                                    </div>
+                                    <div class="time-info">${timeInfo}</div>
+                                    <div class="card-details">
+                                        ${channel.armazenagem ? `
+                                            <div class="detail-item">
+                                                <span class="detail-label">Armz:</span>${channel.armazenagem}
+                                            </div>
+                                        ` : ''}
+                                        ${channel.docas ? `
+                                            <div class="detail-item">
+                                                <span class="detail-label">Docas:</span>${channel.docas}
+                                            </div>
+                                        ` : ''}
+                                    </div>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                `;
+                channelsContainer.appendChild(sectionElement);
+            }
+        }
+
+        // Função principal de atualização
+        function updateAll() {
+            updateClock();
+            renderChannels();
+            updateNextUpdateCounter();
+        }
+
+        // Inicializar
+        updateAll();
+        
+        // Atualizar o relógio a cada segundo
+        setInterval(updateClock, 1000);
+        
+        // Atualizar o contador da próxima atualização a cada segundo
+        setInterval(updateNextUpdateCounter, 1000);
+        
+        // Atualizar completamente a cada 5 minutos
+        setInterval(updateAll, 5 * 60 * 1000);
+    </script>
+</body>
+</html>
